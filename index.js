@@ -1,14 +1,16 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
 
+
 const port = process.env.PORT || 3000;
 const user = process.env.DB_USER;
 const pass = process.env.DB_PASS;
-
+console.log(port, user, pass);
 
 
 // ✅ Middleware
@@ -35,14 +37,34 @@ app.get('/', (req, res) => {
   res.send('Hello from Node + Express server!');
 });
 
+// ✅ Server connect here
 async function run() {
   try {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-    // const db = client.db(process.env.DB_NAME); //databse select
-    // const usersCollection = db.collection('users'); //collection select
+    const db = client.db('habit-tracker_DB'); //databse select
+    const habitsCollection = db.collection('habits'); //collection select
+
+    //all get
+    app.get('/habits', async (req, res) => {
+      const cursor = habitsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+    
+    //all Some newest Data
+    app.get('/habits/featured', async (req, res) => {
+      const cursor = habitsCollection.find().sort({ createdDate: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+
+
+    
   }
   finally {
 
@@ -50,7 +72,6 @@ async function run() {
 }
 
 run().catch(console.dir)
-
 
 // ✅ Start server
 app.listen(port, () => {
