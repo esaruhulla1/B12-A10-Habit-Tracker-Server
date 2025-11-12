@@ -54,6 +54,19 @@ async function run() {
       res.send(result)
     })
 
+
+    // ✅ READ ONE (GET by ID)
+    app.get('/habit/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const user = await habitsCollection.findOne({ _id: new ObjectId(id) });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+      } catch (err) {
+        res.status(500).json({ message: 'Error finding user', error: err });
+      }
+    });
+
     //  CREATE one
     app.post('/habits/add', async (req, res) => {
       try {
@@ -61,7 +74,7 @@ async function run() {
         const result = await habitsCollection.insertOne(newHabit);
         res.status(201).json(result);
       } catch (err) {
-        res.status(500).json({ message: 'Failed to create user', error: err });
+        res.status(500).json({ message: 'Failed to create habits', error: err });
       }
     });
 
@@ -92,7 +105,7 @@ async function run() {
         const result = await habitsCollection.deleteOne({ _id: new ObjectId(id) });
         res.json(result);
       } catch (err) {
-        res.status(500).json({ message: 'Failed to delete user', error: err });
+        res.status(500).json({ message: 'Failed to delete habits', error: err });
       }
     });
 
@@ -110,6 +123,28 @@ async function run() {
         res.status(500).json({ message: "Failed to update habit", error: err });
       }
     });
+
+
+    // ✅ Update habit (PUT)
+    app.put("/habits/update/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedHabit = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $set: updatedHabit };
+        const result = await habitsCollection.updateOne(filter, updateDoc);
+        res.status(200).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "Failed to update habit", error: err });
+      }
+    });
+
+
+
+
+
+
+
 
 
 
