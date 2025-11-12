@@ -109,20 +109,44 @@ async function run() {
       }
     });
 
-    // ✅ Update completion history (Mark Complete)
-    app.patch("/habits/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const updatedFields = req.body;
-        const result = await habitsCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updatedFields }
-        );
-        res.status(200).json(result);
-      } catch (err) {
-        res.status(500).json({ message: "Failed to update habit", error: err });
-      }
-    });
+
+// ✅ Mark Complete using $addToSet (Prevent same-day duplicate)
+app.patch("/habits/complete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { date } = req.body; // client থেকে { date: "dd-mm-yyyy" }
+
+    const result = await habitsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $addToSet: { completionHistory: date } } // একই দিন বারবার যোগ হবে না
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ success: true, message: "Marked as complete" });
+    } else {
+      res.status(200).json({ success: false, message: "Already completed today" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Failed to mark complete", error: err });
+  }
+});
+
+
+
+    // // ✅ Update completion history (Mark Complete)
+    // app.patch("/habits/:id", async (req, res) => {
+    //   try {
+    //     const id = req.params.id;
+    //     const updatedFields = req.body;
+    //     const result = await habitsCollection.updateOne(
+    //       { _id: new ObjectId(id) },
+    //       { $set: updatedFields }
+    //     );
+    //     res.status(200).json(result);
+    //   } catch (err) {
+    //     res.status(500).json({ message: "Failed to update habit", error: err });
+    //   }
+    // });
 
 
     // ✅ Update habit (PUT)
