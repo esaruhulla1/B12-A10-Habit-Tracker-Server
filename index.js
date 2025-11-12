@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 
@@ -85,7 +85,6 @@ async function run() {
       }
     });
 
-
     // ✅ DELETE
     app.delete('/habits/delete/:id', async (req, res) => {
       try {
@@ -97,7 +96,20 @@ async function run() {
       }
     });
 
-
+    // ✅ Update completion history (Mark Complete)
+    app.patch("/habits/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedFields = req.body;
+        const result = await habitsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedFields }
+        );
+        res.status(200).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "Failed to update habit", error: err });
+      }
+    });
 
 
 
