@@ -37,25 +37,36 @@ app.get('/', (req, res) => {
   res.send('Hello from Node + Express server!');
 });
 
-// ✅ Server connect here
+// ✅ Server connect here               
 async function run() {
   try {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-    const db = client.db('habit-tracker_DB'); //databse select
+    const db = client.db('Habit_Tracker_DB'); //databse select
     const habitsCollection = db.collection('habits'); //collection select
 
-    //all get
+    //✅ all get
     app.get('/habits', async (req, res) => {
       const cursor = habitsCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
 
-    
-    //all Some newest Data
+    //  CREATE one
+    app.post('/habits/add', async (req, res) => {
+      try {
+        const newHabit = req.body;
+        const result = await habitsCollection.insertOne(newHabit);
+        res.status(201).json(result);
+      } catch (err) {
+        res.status(500).json({ message: 'Failed to create user', error: err });
+      }
+    });
+
+
+    // Some newest habits (6 Habits)
     app.get('/habits/featured', async (req, res) => {
       const cursor = habitsCollection.find().sort({ createdDate: -1 }).limit(6);
       const result = await cursor.toArray();
@@ -63,8 +74,33 @@ async function run() {
     })
 
 
+    // Get all habits by userEmail (Path param)
+    app.get("/habits/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const result = await habitsCollection.find({ userEmail: email }).toArray();
+        res.status(200).json(result);
+      } catch (err) {
+        res.status(500).json({ message: "Failed to fetch habits", error: err });
+      }
+    });
 
-    
+
+    // ✅ DELETE
+    app.delete('/habits/delete/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await habitsCollection.deleteOne({ _id: new ObjectId(id) });
+        res.json(result);
+      } catch (err) {
+        res.status(500).json({ message: 'Failed to delete user', error: err });
+      }
+    });
+
+
+
+
+
   }
   finally {
 
